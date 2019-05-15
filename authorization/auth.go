@@ -3,6 +3,7 @@ package authorization
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -12,6 +13,7 @@ import (
 	"strings"
 	"fmt"
 	"go.opencensus.io/trace"
+	b64 "encoding/base64"
 )
 
 
@@ -71,7 +73,24 @@ func (TokenAuth) RequireTransportSecurity() bool {
 	return true
 }
 
+func getRole(jwtToken string) (string, error){
+	claim_encoded := strings.Split(jwtToken, ".")[1]
+	claim_decoded, err := b64.StdEncoding.DecodeString(claim_encoded)
+	if err != nil {
+		return "", err
+	}
+	claim_json := string(claim_decoded) + "}"
 
+	claim_map := make(map[string]interface{})
+
+	err2 := json.Unmarshal([]byte(claim_json), &claim_map)
+
+	if err2 != nil {
+		return "", err2
+	}
+	return claim_map["role"].(string), nil
+
+}
 func GetTokenAuthFromContext(ctx context.Context) (string, string, error) {
 	md, _ := metadata.FromIncomingContext(ctx)
 
@@ -85,7 +104,10 @@ func GetTokenAuthFromContext(ctx context.Context) (string, string, error) {
 	if !strings.HasPrefix(auth[0], prefix) {
 		return "","", status.Error(codes.Unauthenticated, `missing "Bearer " prefix in "Authorization" header`)
 	}
-	return strings.TrimPrefix(auth[0], prefix), "", nil
+	token := strings.TrimPrefix(auth[0], prefix)
+	role, err := getRole(token)
+	return role, "", err
+
 
 }
 
