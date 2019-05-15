@@ -30,6 +30,20 @@ func Handler(ctx context.Context, opaServer string, attributes string) (bool, er
 	return request, err
 }
 
+func TokenHandler(ctx context.Context, opaServer string, attributes string) (bool, error){
+	ctx, span := trace.StartSpan(ctx, "Authorize")
+	defer span.End()
+	url := ConstructURL(opaServer, attributes)
+	token, _, err := GetTokenAuthFromContext(ctx)
+	if err != nil {
+		return false, err
+	}
+	request, err := Authen("GET", url, token, "")
+	return request, err
+}
+
+
+//basic Auth
 func basicAuth(username, password string) string {
 	auth := username + ":" + password
 	return base64.StdEncoding.EncodeToString([]byte(auth))
@@ -40,11 +54,47 @@ func redirectPolicyFunc(req *http.Request, via []*http.Request) error{
 	return nil
 }
 
+
+
+type TokenAuth struct {
+	token string
+}
+
+// Return value is mapped to request headers.
+func (t TokenAuth) GetRequestMetadata(ctx context.Context, in ...string) (map[string]string, error) {
+	return map[string]string{
+		"authorization": "Bearer " + t.token,
+	}, nil
+}
+
+func (TokenAuth) RequireTransportSecurity() bool {
+	return true
+}
+
+
+func GetTokenAuthFromContext(ctx context.Context) (string, string, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+
+	auth := md.Get("grpcgateway-authorization")
+	fmt.Println(auth)
+	if auth == nil || len(auth) == 0 || auth[0] == "" || len(auth) == 0 {
+		return "","", status.Error(codes.Unauthenticated, `missing "Basic " prefix in "Authorization" header`)
+	}
+
+	const prefix = "Bearer "
+	if !strings.HasPrefix(auth[0], prefix) {
+		return "","", status.Error(codes.Unauthenticated, `missing "Bearer " prefix in "Authorization" header`)
+	}
+	return strings.TrimPrefix(auth[0], prefix), "", nil
+
+}
+
 // Get username, password from grpc context
 func GetAuthFromContext(ctx context.Context) (string, string, error){
 	md, _ := metadata.FromIncomingContext(ctx)
 
 	auth := md.Get("grpcgateway-authorization")
+	fmt.Println(auth)
 	const prefix = "Basic "
 	if auth == nil || len(auth) == 0 || auth[0] == "" || len(auth) == 0 {
 		return "","", status.Error(codes.Unauthenticated, `missing "Basic " prefix in "Authorization" header`)
