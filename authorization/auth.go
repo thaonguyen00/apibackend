@@ -88,7 +88,12 @@ func getRole(jwtToken string) (string, error){
 	if err2 != nil {
 		//return "", err2
 	}
-	return claim_map["role"].(string), nil
+	var err2 error
+	role, ok := claim_map["role"]
+	if ! ok {
+		err2 = fmt.Errorf("No role in token")
+	}
+	return role.(string), err2
 
 }
 func GetTokenAuthFromContext(ctx context.Context) (string, string, error) {
