@@ -77,7 +77,7 @@ func getRole(jwtToken string) (string, error){
 	claim_encoded := strings.Split(jwtToken, ".")[1]
 	claim_decoded, err := b64.StdEncoding.DecodeString(claim_encoded)
 	if err != nil {
-		return "", err
+		//return "", err
 	}
 	claim_json := string(claim_decoded) + "}"
 
@@ -86,7 +86,7 @@ func getRole(jwtToken string) (string, error){
 	err2 := json.Unmarshal([]byte(claim_json), &claim_map)
 
 	if err2 != nil {
-		return "", err2
+		//return "", err2
 	}
 	return claim_map["role"].(string), nil
 
