@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strings"
 	"fmt"
+	"go.opencensus.io/trace"
 )
 
 
@@ -18,6 +19,8 @@ import (
 
 
 func Handler(ctx context.Context, opaServer string, attributes string) (bool, error){
+	ctx, span := trace.StartSpan(ctx, "Authorize")
+	defer span.End()
 	url := ConstructURL(opaServer, attributes)
 	user, pass, err := GetAuthFromContext(ctx)
 	if err != nil {
