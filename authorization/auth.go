@@ -10,19 +10,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"fmt"
 )
 
 
 
-func basicAuth(username, password string) string {
-	auth := username + ":" + password
-	return base64.StdEncoding.EncodeToString([]byte(auth))
-}
-
-func redirectPolicyFunc(req *http.Request, via []*http.Request) error{
-	req.Header.Add("Authorization","Basic " + basicAuth("username1","password123"))
-	return nil
-}
 
 
 func Handler(ctx context.Context, opaServer string, attributes string) (bool, error){
@@ -32,9 +24,17 @@ func Handler(ctx context.Context, opaServer string, attributes string) (bool, er
 		return false, err
 	}
 	request, err := Authen("GET", url, user, pass)
-
-
 	return request, err
+}
+
+func basicAuth(username, password string) string {
+	auth := username + ":" + password
+	return base64.StdEncoding.EncodeToString([]byte(auth))
+}
+
+func redirectPolicyFunc(req *http.Request, via []*http.Request) error{
+	req.Header.Add("Authorization","Basic " + basicAuth("username1","password123"))
+	return nil
 }
 
 // Get username, password from grpc context
@@ -100,9 +100,9 @@ func Authen(method, url, username, password string) (bool, error) {
 	if strings.HasPrefix(response, "Success"){
 		return true, nil
 	} else if strings.HasPrefix(response, "Error") {
-		return false, nil
+		return false, status.Errorf(codes.PermissionDenied, fmt.Sprintf("Permission Denied"))
 	} else {
-		return false, errors.Errorf("Unexpected result.")
+		return false, status.Errorf(codes.Internal, fmt.Sprintf("Internal Error"))
 	}
 
 }
