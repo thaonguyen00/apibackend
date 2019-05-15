@@ -46,7 +46,9 @@ func GetAuthFromContext(ctx context.Context) (string, string, error){
 
 	auth := md.Get("grpcgateway-authorization")
 	const prefix = "Basic "
-
+	if auth == nil || len(auth) == 0 || auth[0] == nil || len(auth) == 0 {
+		return "","", status.Error(codes.Unauthenticated, `missing "Basic " prefix in "Authorization" header`)
+	}
 	if !strings.HasPrefix(auth[0], prefix) {
 		return "","", status.Error(codes.Unauthenticated, `missing "Basic " prefix in "Authorization" header`)
 	}
