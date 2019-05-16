@@ -12,7 +12,7 @@ import (
 )
 
 func GrpcTracer(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-	ctx, span := trace.StartSpan(ctx, "Endpoint Request")
+	ctx, span := trace.StartSpan(ctx, "GRPC Request")
 	defer span.End()
 	span.Annotate([]trace.Attribute{
 		trace.StringAttribute("request", fmt.Sprintf("%v", req)),
@@ -25,7 +25,7 @@ func GrpcLogger(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo
 	logger := klog.NewLogfmtLogger(os.Stderr)
 	defer func(begin time.Time) {
 		_ = logger.Log(
-			"method", "Endpoint Request",
+			"method", "GRPC Request",
 			"err", err,
 			"request", spew.Sdump(req),
 			"took", time.Since(begin),
@@ -34,3 +34,5 @@ func GrpcLogger(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo
 
 	return handler(ctx, req)
 }
+
+

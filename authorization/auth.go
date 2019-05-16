@@ -2,8 +2,9 @@ package authorization
 
 import (
 	"context"
-	"encoding/base64"
+	b64 "encoding/base64"
 	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -11,30 +12,20 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"fmt"
-	"go.opencensus.io/trace"
-	b64 "encoding/base64"
 )
 
-
-
-
-
-func Handler(ctx context.Context, opaServer string, attributes string) (bool, error){
-	ctx, span := trace.StartSpan(ctx, "Authorize")
-	defer span.End()
-	url := ConstructURL(opaServer, attributes)
-	user, pass, err := GetAuthFromContext(ctx)
-	if err != nil {
-		return false, err
-	}
-	request, err := Authen("GET", url, user, pass)
-	return request, err
-}
+//func Handler(ctx context.Context, opaServer string, attributes string) (bool, error){
+//
+//	url := ConstructURL(opaServer, attributes)
+//	user, pass, err := GetAuthFromContext(ctx)
+//	if err != nil {
+//		return false, err
+//	}
+//	request, err := Authen("GET", url, user, pass)
+//	return request, err
+//}
 
 func TokenHandler(ctx context.Context, opaServer string, attributes string) (bool, error){
-	ctx, span := trace.StartSpan(ctx, "Authorize")
-	defer span.End()
 	url := ConstructURL(opaServer, attributes)
 	token, _, err := GetTokenAuthFromContext(ctx)
 	if err != nil {
@@ -44,17 +35,17 @@ func TokenHandler(ctx context.Context, opaServer string, attributes string) (boo
 	return request, err
 }
 
-
-//basic Auth
-func basicAuth(username, password string) string {
-	auth := username + ":" + password
-	return base64.StdEncoding.EncodeToString([]byte(auth))
-}
-
-func redirectPolicyFunc(req *http.Request, via []*http.Request) error{
-	req.Header.Add("Authorization","Basic " + basicAuth("username1","password123"))
-	return nil
-}
+//
+////basic Auth
+//func basicAuth(username, password string) string {
+//	auth := username + ":" + password
+//	return base64.StdEncoding.EncodeToString([]byte(auth))
+//}
+//
+//func redirectPolicyFunc(req *http.Request, via []*http.Request) error{
+//	req.Header.Add("Authorization","Basic " + basicAuth("username1","password123"))
+//	return nil
+//}
 
 
 
@@ -115,36 +106,36 @@ func GetTokenAuthFromContext(ctx context.Context) (string, string, error) {
 
 
 }
-
-// Get username, password from grpc context
-func GetAuthFromContext(ctx context.Context) (string, string, error){
-	md, _ := metadata.FromIncomingContext(ctx)
-
-	auth := md.Get("grpcgateway-authorization")
-	fmt.Println(auth)
-	const prefix = "Basic "
-	if auth == nil || len(auth) == 0 || auth[0] == "" || len(auth) == 0 {
-		return "","", status.Error(codes.Unauthenticated, `missing "Basic " prefix in "Authorization" header`)
-	}
-	if !strings.HasPrefix(auth[0], prefix) {
-		return "","", status.Error(codes.Unauthenticated, `missing "Basic " prefix in "Authorization" header`)
-	}
-
-	c, err := base64.StdEncoding.DecodeString(auth[0][len(prefix):])
-	if err != nil {
-		return  "","", status.Error(codes.Unauthenticated, `invalid base64 in header`)
-	}
-
-	cs := string(c)
-	so := strings.IndexByte(cs, ':')
-	if so < 0 {
-		return  "","", status.Error(codes.Unauthenticated, `invalid basic auth format`)
-	}
-
-	user, password := cs[:so], cs[so+1:]
-
-	return user, password, nil
-}
+//
+//// Get username, password from grpc context
+//func GetAuthFromContext(ctx context.Context) (string, string, error){
+//	md, _ := metadata.FromIncomingContext(ctx)
+//
+//	auth := md.Get("grpcgateway-authorization")
+//	fmt.Println(auth)
+//	const prefix = "Basic "
+//	if auth == nil || len(auth) == 0 || auth[0] == "" || len(auth) == 0 {
+//		return "","", status.Error(codes.Unauthenticated, `missing "Basic " prefix in "Authorization" header`)
+//	}
+//	if !strings.HasPrefix(auth[0], prefix) {
+//		return "","", status.Error(codes.Unauthenticated, `missing "Basic " prefix in "Authorization" header`)
+//	}
+//
+//	c, err := base64.StdEncoding.DecodeString(auth[0][len(prefix):])
+//	if err != nil {
+//		return  "","", status.Error(codes.Unauthenticated, `invalid base64 in header`)
+//	}
+//
+//	cs := string(c)
+//	so := strings.IndexByte(cs, ':')
+//	if so < 0 {
+//		return  "","", status.Error(codes.Unauthenticated, `invalid basic auth format`)
+//	}
+//
+//	user, password := cs[:so], cs[so+1:]
+//
+//	return user, password, nil
+//}
 
 func ConstructURL(opaServer, fieldList string) string {
 	strNoSpace := strings.Trim(fieldList, " ")
