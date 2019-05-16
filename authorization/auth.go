@@ -166,7 +166,11 @@ func HttpRequest(method, url, username, password string) (string,  error) {
 	req.Header.Add("Authorization","Basic " + basicAuth(username,password))
 
 	resp, err := client.Do(req)
+	if err != nil {
+		return "", errors.Wrap(err, "Cannot connect to OPA Server: ")
+	}
 	defer resp.Body.Close()
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", errors.Wrap(err, "client.Do in OPA: ")
