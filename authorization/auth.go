@@ -35,17 +35,17 @@ func TokenHandler(ctx context.Context, opaServer string, attributes string) (boo
 	return request, err
 }
 
-//
-////basic Auth
-//func basicAuth(username, password string) string {
-//	auth := username + ":" + password
-//	return base64.StdEncoding.EncodeToString([]byte(auth))
-//}
-//
-//func redirectPolicyFunc(req *http.Request, via []*http.Request) error{
-//	req.Header.Add("Authorization","Basic " + basicAuth("username1","password123"))
-//	return nil
-//}
+
+//basic Auth
+func basicAuth(username, password string) string {
+	auth := username + ":" + password
+	return b64.StdEncoding.EncodeToString([]byte(auth))
+}
+
+func redirectPolicyFunc(req *http.Request, via []*http.Request) error{
+	req.Header.Add("Authorization","Basic " + basicAuth("username1","password123"))
+	return nil
+}
 
 
 
