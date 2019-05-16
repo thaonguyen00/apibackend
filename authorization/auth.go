@@ -91,7 +91,7 @@ func GetTokenAuthFromContext(ctx context.Context) (string, string, error) {
 	md, _ := metadata.FromIncomingContext(ctx)
 
 	auth := md.Get("grpcgateway-authorization")
-	fmt.Println(auth)
+	//fmt.Println(auth)
 	if auth == nil || len(auth) == 0 || auth[0] == "" || len(auth) == 0 {
 		return "","", status.Error(codes.Unauthenticated, `missing "Basic " prefix in "Authorization" header`)
 	}
