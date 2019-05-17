@@ -2,8 +2,6 @@ package gRPC
 
 import (
 	"github.com/davecgh/go-spew/spew"
-	"github.com/thaonguyen00/apibackend/authorization"
-	"github.com/thaonguyen00/apibackend/utils"
 	"go.opencensus.io/trace"
 	"google.golang.org/grpc"
 	"os"
