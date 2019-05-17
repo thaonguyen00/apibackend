@@ -15,12 +15,12 @@ import (
 )
 
 func TokenHandler(ctx context.Context, opaServer string, attributes string) (bool, error){
-	url := ConstructURL(opaServer, attributes)
+	url := ConstructOPAURL(opaServer, attributes)
 	token, _, err := GetTokenAuthFromContext(ctx)
 	if err != nil {
 		return false, err
 	}
-	request, err := Authen("GET", url, token, "")
+	request, err := OPAAuthen("GET", url, token, "")
 	return request, err
 }
 
@@ -82,12 +82,12 @@ func GetTokenAuthFromContext(ctx context.Context) (string, string, error) {
 	auth := md.Get("grpcgateway-authorization")
 	//fmt.Println(auth)
 	if auth == nil || len(auth) == 0 || auth[0] == "" || len(auth) == 0 {
-		return "","", status.Error(codes.Unauthenticated, `missing "Basic " prefix in "Authorization" header`)
+		return "","", status.Error(codes.Unauthenticated, `missing "grpcgateway-authorization" in header`)
 	}
 
 	const prefix = "Bearer "
 	if !strings.HasPrefix(auth[0], prefix) {
-		return "","", status.Error(codes.Unauthenticated, `missing "Bearer " prefix in "Authorization" header`)
+		return "","", status.Error(codes.Unauthenticated, `missing "Bearer " prefix in "grpcgateway-authorization" header`)
 	}
 	token := strings.TrimPrefix(auth[0], prefix)
 	role, err := getRole(token)
@@ -96,13 +96,13 @@ func GetTokenAuthFromContext(ctx context.Context) (string, string, error) {
 
 }
 
-func ConstructURL(opaServer, fieldList string) string {
+func ConstructOPAURL(opaServer, fieldList string) string {
 	strNoSpace := strings.Trim(fieldList, " ")
 	opapath := strings.Replace(strNoSpace, ",", "/", -1)
 	return opaServer + opapath
 }
 
-func HttpRequest(method, url, username, password string) (string,  error) {
+func OPAHttpRequest(method, url, username, password string) (string,  error) {
 
 	client := &http.Client{
 		//Jar: cookieJar,
@@ -128,8 +128,8 @@ func HttpRequest(method, url, username, password string) (string,  error) {
 	return string(body), nil
 }
 
-func Authen(method, url, username, password string) (bool, error) {
-	response, err := HttpRequest(method, url, username,password)
+func OPAAuthen(method, url, username, password string) (bool, error) {
+	response, err := OPAHttpRequest(method, url, username,password)
 	if err != nil {
 		return false, err
 	}
