@@ -38,20 +38,20 @@ func redirectPolicyFunc(req *http.Request, via []*http.Request) error{
 
 
 
-type TokenAuth struct {
-	token string
-}
-
-// Return value is mapped to request headers.
-func (t TokenAuth) GetRequestMetadata(ctx context.Context, in ...string) (map[string]string, error) {
-	return map[string]string{
-		"authorization": "Bearer " + t.token,
-	}, nil
-}
-
-func (TokenAuth) RequireTransportSecurity() bool {
-	return true
-}
+//type TokenAuth struct {
+//	token string
+//}
+//
+//// Return value is mapped to request headers.
+//func (t TokenAuth) GetRequestMetadata(ctx context.Context, in ...string) (map[string]string, error) {
+//	return map[string]string{
+//		"authorization": "Bearer " + t.token,
+//	}, nil
+//}
+//
+//func (TokenAuth) RequireTransportSecurity() bool {
+//	return true
+//}
 
 func getRole(jwtToken string) (string, error){
 	claim_encoded := strings.Split(jwtToken, ".")[1]
