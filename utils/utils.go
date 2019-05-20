@@ -6,10 +6,16 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-func GetField(v interface{}, field string) string {
+//
+
+func GetField(v interface{}, field string) (string, error) {
 	r := reflect.ValueOf(v)
 	f := reflect.Indirect(r).FieldByName(field)
-	return fmt.Sprint(f)
+	str:= fmt.Sprint(f)
+	if str == "<invalid reflect.Value>" {
+		return "", fmt.Errorf("Field '%s' doesn't exist in struct", field)
+	}
+	return str, nil
 }
 
 func CreateFilterFromString(filter interface{}) (map[string]interface{}, error) {
