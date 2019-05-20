@@ -4,16 +4,20 @@ import (
 	"reflect"
 	"fmt"
 	"gopkg.in/mgo.v2/bson"
+	"github.com/pkg/errors"
 )
 
 //
 
 func GetField(v interface{}, field string) (string, error) {
 	r := reflect.ValueOf(v)
+	if r.IsValid() {
+		return "", errors.New("Nil object")
+	}
 	f := reflect.Indirect(r).FieldByName(field)
 	str:= fmt.Sprint(f)
 	if str == "<invalid reflect.Value>" {
-		return "", fmt.Errorf("Field '%s' doesn't exist in struct", field)
+		return "",  errors.New("Field doesn't exist")
 	}
 	return str, nil
 }
