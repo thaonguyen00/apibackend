@@ -11,9 +11,6 @@ import (
 
 func GetField(v interface{}, field string) (string, error) {
 	r := reflect.ValueOf(v)
-	if r.IsValid() {
-		return "", errors.New("Nil object")
-	}
 	f := reflect.Indirect(r).FieldByName(field)
 	str:= fmt.Sprint(f)
 	if str == "<invalid reflect.Value>" {
